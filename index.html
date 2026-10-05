@@ -1,13 +1,392 @@
-<!DOCTYPE html>
-<html>
+ <html>
+                                                                <body>  <h1>Мой первый сайт</h1>
+Итак, приветствую на моём первом сайте!
+<a href="mailto:matveypilipenko3@gmail.com">Контакты</a>
+<audio src="test.mp3" controls></audio>
+
+
+
+
+<i>Если нужна помощь, обращаться с помощью кнопки <b>Контакты</b> </i>
+                                                                         ЭМУЛЯТОР
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">                                            
+    <title>JS-NES Ultimate Emulator</title>
+    <!-- Подключаем JSNES из CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsnes/1.2.1/jsnes.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background-color: #2a3a1a;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 100%;
+            width: 640px;
+        }
+        header {
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        h1 {
+            font-size: 1.5rem;
+            color: #ff4757;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 5px;
+        }
+        .file-input-container {
+            margin-bottom: 15px;
+        }
+        input[type="file"] {
+            display: none;
+        }
+        .file-label {
+            background-color: #ff4757;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+            display: inline-block;
+        }
+        .file-label:hover {
+            background-color: #ff6b81;
+        }
+        .screen-container {
+            background: #000;
+            border: 8px solid #2f3542;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            position: relative;
+            width: 100%;
+            aspect-ratio: 4 / 3;
+            max-width: 512px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        canvas {
+            width: 100%;
+            height: 100%;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+        /* Геймпад скрыт по умолчанию на ПК */
+        .gamepad {
+            display: none;
+            width: 100%;
+            max-width: 450px;
+            margin-top: 20px;
+            padding: 10px;
+            background: #2f3542;
+            border-radius: 20px;
+            position: relative;
+        }
+        .gamepad-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        .dpad {
+            position: relative;
+            width: 120px;
+            height: 120px;
+        }
+        .dpad-btn {
+            position: absolute;
+            background: #1e222b;
+            border: 2px solid #57606f;
+            color: #fff;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 5px;
+        }
+        .dpad-btn:active { background: #ff4757; }
+        .dpad-up { top: 0; left: 40px; width: 40px; height: 45px; border-bottom: none; border-radius: 5px 5px 0 0; }
+        .dpad-down { bottom: 0; left: 40px; width: 40px; height: 45px; border-top: none; border-radius: 0 0 5px 5px; }
+        .dpad-left { top: 40px; left: 0; width: 45px; height: 40px; border-right: none; border-radius: 5px 0 0 5px; }
+        .dpad-right { top: 40px; right: 0; width: 45px; height: 40px; border-left: none; border-radius: 0 5px 5px 0; }
+        .dpad-center { top: 40px; left: 40px; width: 40px; height: 40px; background: #1e222b; border: none; }
+        
+        .action-btns {
+            display: flex;
+            gap: 15px;
+        }
+        .action-btn {
+            width: 55px;
+            height: 55px;
+            background: #ff4757;
+            border: 3px solid #ced6e0;
+            border-radius: 50%;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 0 #a4b0be;
+        }
+        .action-btn:active {
+            transform: translateY(4px);
+            box-shadow: none;
+        }
+        .system-btns {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            width: 100%;
+            margin-top: 5px;
+        }
+        .sys-btn {
+            background: #747d8c;
+            height: 15px;
+            width: 45px;
+            border-radius: 10px;
+            border: 1px solid #1e222b;
+            position: relative;
+        }
+        .sys-btn:active { background: #ff4757; }
+        .sys-btn span {
+            position: absolute;
+            bottom: -18px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            color: #ced6e0;
+            font-weight: bold;
+        }
+        .controls-info {
+            margin-top: 15px;
+            font-size: 0.85rem;
+            color: #a4b0be;
+            text-align: center;
+            line-height: 1.4;
+        }
+        /* Адаптивность для мобильных */
+        @media (max-width: 768px) {
+            .gamepad { display: block; }
+            .controls-info { display: none; }
+            h1 { font-size: 1.2rem; }
+            .screen-container { max-width: 90vw; }
+        }
+    </style>
 </head>
 <body>
 
-<h1>Мой первый заголовок</h1>
+<div class="container">
+    <header>
+        <h1>ЭМУЛЯТОР NES онлайн</h1>
+    </header>
 
-<p>Мой первый параграф.</p>
+    <div class="file-input-container">
+        <label for="rom-file" class="file-label">Открыть .nes ROM</label>
+        <input type="file" id="rom-file" accept=".nes">
+    </div>
 
-</body>
-</html>
+    <div class="screen-container">
+        <canvas id="nes-canvas" width="256" height="240"></canvas>
+    </div>
+
+    <!-- Мобильный Геймпад -->
+    <div class="gamepad">
+        <div class="gamepad-row">
+            <div class="dpad">
+                <div class="dpad-btn dpad-up" data-key="up">↑</div>
+                <div class="dpad-btn dpad-down" data-key="down">↓</div>
+                <div class="dpad-btn dpad-left" data-key="left">←</div>
+                <div class="dpad-btn dpad-right" data-key="right">→</div>
+                <div class="dpad-center"></div>
+            </div>
+            <div class="action-btns">
+                <div class="action-btn" data-key="b">B</div>
+                <div class="action-btn" data-key="a">A</div>
+            </div>
+        </div>
+        <div class="system-btns">
+            <div class="sys-btn" data-key="select"><span>Select</span></div>
+            <div class="sys-btn" data-key="start"><span>Start</span></div>
+        </div>
+    </div>
+
+    <div class="controls-info">
+        <strong>Управление на ПК:</strong><br>
+        Стрелки — Движение | Z — Кнопка B | X — Кнопка A<br>
+        Enter — Start | Shift — Select
+    </div>
+</div>
+
+<script>
+    const canvas = document.getElementById('nes-canvas');
+    const ctx = canvas.getContext('2d');
+    let imageData = ctx.createImageData(256, 240);
+    let buf = new ArrayBuffer(imageData.data.length);
+    let buf8 = new Uint8ClampedArray(buf);
+    let buf32 = new Uint32Array(buf);
+
+    // Аудио контекст
+    let audioCtx = null;
+    let audioBuffer = [];
+    const AUDIO_BUFFER_SIZE = 4096;
+
+    function initAudio() {
+        if (audioCtx) return;
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const scriptProcessor = audioCtx.createScriptProcessor(AUDIO_BUFFER_SIZE, 0, 1);
+        scriptProcessor.onaudioprocess = function(e) {
+            const output = e.outputBuffer.getChannelData(0);
+            for (let i = 0; i < AUDIO_BUFFER_SIZE; i++) {
+                output[i] = audioBuffer.length > 0 ? audioBuffer.shift() : 0;
+            }
+        };
+        scriptProcessor.connect(audioCtx.destination);
+    }
+
+    // Инициализация JSNES
+    const nes = new jsnes.NES({
+        onFrame: function(buffer) {
+            let i = 0;
+            for (let y = 0; y < 240; y++) {
+                for (let x = 0; x < 256; x++) {
+                    const color = buffer[i++];
+                    buf32[y * 256 + x] = 0xFF000000 | color;
+                }
+            }
+            imageData.data.set(buf8);
+            ctx.putImageData(imageData, 0, 0);
+        },
+        onAudioSample: function(left, right) {
+            if (audioBuffer.length < AUDIO_BUFFER_SIZE * 2) {
+                audioBuffer.push(left);
+            }
+        },
+        sampleRate: 44100
+    });
+
+    // Маппинг клавиш клавиатуры
+    const keyboardMap = {
+        38: jsnes.Controller.BUTTON_UP,
+        40: jsnes.Controller.BUTTON_DOWN,
+        37: jsnes.Controller.BUTTON_LEFT,
+        39: jsnes.Controller.BUTTON_RIGHT,
+        88: jsnes.Controller.BUTTON_A, // X
+        90: jsnes.Controller.BUTTON_B, // Z
+        13: jsnes.Controller.BUTTON_START, // Enter
+        16: jsnes.Controller.BUTTON_SELECT // Shift
+    };
+
+    window.addEventListener('keydown', (e) => {
+        initAudio();
+        if (keyboardMap[e.keyCode] !== undefined) {
+            nes.buttonDown(1, keyboardMap[e.keyCode]);
+            e.preventDefault();
+        }
+    });
+
+    window.addEventListener('keyup', (e) => {
+        if (keyboardMap[e.keyCode] !== undefined) {
+            nes.buttonUp(1, keyboardMap[e.keyCode]);
+            e.preventDefault();
+        }
+    });
+
+    // Экранный геймпад
+    const gamepadMap = {
+        'up': jsnes.Controller.BUTTON_UP,
+        'down': jsnes.Controller.BUTTON_DOWN,
+        'left': jsnes.Controller.BUTTON_LEFT,
+        'right': jsnes.Controller.BUTTON_RIGHT,
+        'a': jsnes.Controller.BUTTON_A,
+        'b': jsnes.Controller.BUTTON_B,
+        'start': jsnes.Controller.BUTTON_START,
+        'select': jsnes.Controller.BUTTON_SELECT
+    };
+
+    document.querySelectorAll('.dpad-btn, .action-btn, .sys-btn').forEach(btn => {
+        const key = btn.getAttribute('data-key');
+        const nesKey = gamepadMap[key];
+
+        const handleStart = (e) => {
+            e.preventDefault();
+            initAudio();
+            nes.buttonDown(1, nesKey);
+        };
+
+        const handleEnd = (e) => {
+            e.preventDefault();
+            nes.buttonUp(1, nesKey);
+        };
+
+        btn.addEventListener('touchstart', handleStart, {passive: false});
+        btn.addEventListener('touchend', handleEnd, {passive: false});
+        btn.addEventListener('mousedown', handleStart);
+        btn.addEventListener('mouseup', handleEnd);
+    });
+
+    // Загрузка ROM файла
+    document.getElementById('rom-file').addEventListener('change', (e) => {
+        initAudio();
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            nes.loadROM(event.target.result);
+            
+            // Запуск цикла эмуляции
+            function step() {
+                nes.frame();
+                setTimeout(step, 1000 / 60);
+            }
+            step();
+        };
+        reader.readAsBinaryString(file);
+    });
+</script> 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                                         <p>СКАЧАТЬ МУЗЫКУ</p>
+<a href="https://transfiles.ru/hwucb">Скачать хороший саундтрек</a>
